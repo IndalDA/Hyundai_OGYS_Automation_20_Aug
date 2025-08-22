@@ -96,47 +96,52 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
                 if sd is None or sd.empty:
                     validation_errors.append(f"{location}: Unable to read Stock -> {file}")
                     continue
-
-                # choose part / qty columns
-                part_col = next((c for c in STOCK_PART_COLS if c in sd.columns), None)
-                qty_col  = next((c for c in STOCK_QTY_COLS if c in sd.columns), None)
-                if not part_col or not qty_col:
-                    validation_errors.append(f"{location}: Stock file missing part/qty columns -> {file}")
-                    continue
-
                 sd['Brand'] = brand
                 sd['Dealer'] = dealer
                 sd['Location'] = location
                 sd['__source_file__'] = file
+                Stock_data.append(sd)
+                
+              # # choose part / qty columns
+                # part_col = next((c for c in STOCK_PART_COLS if c in sd.columns), None)
+                # qty_col  = next((c for c in STOCK_QTY_COLS if c in sd.columns), None)
+                # if not part_col or not qty_col:
+                #     validation_errors.append(f"{location}: Stock file missing part/qty columns -> {file}")
+                #     continue
 
-                # Map PART TYPE -> New partcat
-                if 'PART TYPE' in sd.columns:
-                    sd['PART TYPE'] = sd['PART TYPE'].astype(str).str.strip()
-                    sd['New partcat'] = sd['PART TYPE'].str.upper().map({'X': 'Spares','Y': 'Spares', 'A': 'Accessories'})
-                else:
-                    sd['New partcat'] = None
+                # sd['Brand'] = brand
+                # sd['Dealer'] = dealer
+                # sd['Location'] = location
+                # sd['__source_file__'] = file
 
-                # category filter
-                # if select_categories!='All':
-                #     sel = set([str(x).strip().lower() for x in select_categories])
-                #     sd = sd[sd['New partcat'].astype(str).str.lower().isin(sel)]
+                # # Map PART TYPE -> New partcat
+                # if 'PART TYPE' in sd.columns:
+                #     sd['PART TYPE'] = sd['PART TYPE'].astype(str).str.strip()
+                #     sd['New partcat'] = sd['PART TYPE'].str.upper().map({'X': 'Spares','Y': 'Spares', 'A': 'Accessories'})
+                # else:
+                #     sd['New partcat'] = None
 
-                if select_categories==['Spares']:
-                  sd = sd[sd['New partcat'].isin(select_categories)]
-                elif select_categories==['Accessories']:
-                  sd = sd[sd['New partcat'].isin(select_categories)]
-                elif select_categories==['Spares','Accessories']:
-                  sd = sd[sd['New partcat'].isin(select_categories)]
-                elif select_categories==['All']:
-                  sd=sd.copy()
+                # # category filter
+                # # if select_categories!='All':
+                # #     sel = set([str(x).strip().lower() for x in select_categories])
+                # #     sd = sd[sd['New partcat'].astype(str).str.lower().isin(sel)]
+
+                # if select_categories==['Spares']:
+                #   sd = sd[sd['New partcat'].isin(select_categories)]
+                # elif select_categories==['Accessories']:
+                #   sd = sd[sd['New partcat'].isin(select_categories)]
+                # elif select_categories==['Spares','Accessories']:
+                #   sd = sd[sd['New partcat'].isin(select_categories)]
+                # elif select_categories==['All']:
+                #   sd=sd.copy()
                   
-                out = sd[['Brand', 'Dealer', 'Location', part_col, qty_col]].copy()
-                out.rename(columns={part_col: 'Partnumber', qty_col: 'Qty'}, inplace=True)
-                out['Partnumber']=out['Partnumber'].astype(str).str.strip()
-                out['Qty'] = to_num(out['Qty']).astype(float)
+                # out = sd[['Brand', 'Dealer', 'Location', part_col, qty_col]].copy()
+                # out.rename(columns={part_col: 'Partnumber', qty_col: 'Qty'}, inplace=True)
+                # out['Partnumber']=out['Partnumber'].astype(str).str.strip()
+                # out['Qty'] = to_num(out['Qty']).astype(float)
                
-                Stock_data.append(out)
-                continue
+                # Stock_data.append(out)
+                # continue
 
             # RECEIVING PENDING DETAIL (header=1)
             if fl.startswith("receving pending detail"):
@@ -378,6 +383,7 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
         if Stock_data:
             key_stock = f"Stock_{brand}_{dealer}_{location}.xlsx"
             stock_final = pd.concat(Stock_data, ignore_index=True)
+            
             previews[key_stock] = stock_final.copy()
             buf = io.BytesIO()
             with pd.ExcelWriter(buf, engine="openpyxl") as writer:
@@ -530,6 +536,7 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
     else:
         st.info("ℹ No reports available to download.")
         st.warning("Pls check Folder Structure")  # (fix typo from st.warring -> st.warning)
+
 
 
 
