@@ -117,10 +117,16 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
                     sd['New partcat'] = None
 
                 # category filter
-                if select_categories!='All':
-                    sel = set([str(x).strip().lower() for x in select_categories])
-                    sd = sd[sd['New partcat'].astype(str).str.lower().isin(sel)]
-                  
+                # if select_categories!='All':
+                #     sel = set([str(x).strip().lower() for x in select_categories])
+                #     sd = sd[sd['New partcat'].astype(str).str.lower().isin(sel)]
+
+                if select_categories==['Spares']:
+                  sd = sd[sd['New partcat'].isin(select_categories)]
+              elif select_categories==['Accessories']:
+                  sd = sd[sd['New partcat'].isin(select_categories)]
+              elif select_categories==['Spares','Accessories']:
+                  sd = sd[sd['New partcat'].isin(select_categories)]
 
                 out = sd[['Brand', 'Dealer', 'Location', part_col, qty_col]].copy()
                 out.rename(columns={part_col: 'Partnumber', qty_col: 'Qty'}, inplace=True)
@@ -522,6 +528,7 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
     else:
         st.info("ℹ No reports available to download.")
         st.warning("Pls check Folder Structure")  # (fix typo from st.warring -> st.warning)
+
 
 
 
