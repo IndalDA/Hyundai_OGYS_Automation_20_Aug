@@ -503,8 +503,8 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
                         if summary.empty:
                             summary = pd.DataFrame([{'Location': '—', 'OrderNumber': 'No "Pls Check" rows'}])
     
-                        summary.to_excel(writer, sheet_name="Summary", index=False)
-                        combined_df.to_excel(writer, sheet_name="FullData", index=False)
+                        summary.to_excel(writer, sheet_name="Check Order status", index=False)
+                        combined_df.to_excel(writer, sheet_name="sheet1", index=False)
                         writer.book.active = 0
                     else:
                         combined_df.to_excel(writer, sheet_name="Sheet1", index=False)
@@ -521,6 +521,7 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
     else:
         st.info("ℹ No reports available to download.")
         st.warning("Pls check Folder Structure")  # (fix typo from st.warring -> st.warning)
+
 
 
 
