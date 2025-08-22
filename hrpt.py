@@ -123,9 +123,10 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
 
                 if select_categories==['Spares']:
                   sd = sd[sd['New partcat'].isin(select_categories)]
-              elif select_categories==['Accessories']:
+                elif select_categories==['Accessories']:
                   sd = sd[sd['New partcat'].isin(select_categories)]
-              elif select_categories==['Spares','Accessories']:
+                elif select_categories==['Spares','Accessories']:
+                  
                   sd = sd[sd['New partcat'].isin(select_categories)]
 
                 out = sd[['Brand', 'Dealer', 'Location', part_col, qty_col]].copy()
@@ -528,6 +529,7 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
     else:
         st.info("ℹ No reports available to download.")
         st.warning("Pls check Folder Structure")  # (fix typo from st.warring -> st.warning)
+
 
 
 
