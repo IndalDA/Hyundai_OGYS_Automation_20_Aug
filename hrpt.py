@@ -304,28 +304,67 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
             frames_for_oem.append(rtdw)
 
         # Save OEM_{...}.xlsx (Hyundai unified)
+        # if frames_for_oem:
+        #     key_oem = f"OEM_{brand}_{dealer}_{location}.xlsx"
+        #     oem_final = pd.concat(frames_for_oem, ignore_index=True)
+        #     oem_final['PartNumber']  = oem_final['PartNumber'].astype(str).str.strip().replace('-','').replace('.','')
+            
+        #     oem_final['OEMInvoiceNo']=''
+        #     oem_final['OEMInvoiceDate']=''
+        #     oem_final['OEMInvoiceQty']=''
+        #     oem_final['OrderDate'] = pd.to_datetime(oem_final['OrderDate'], errors='coerce')
+        #     oem_final['OrderDate'] = oem_final['OrderDate'].dt.strftime('%d %b %Y')
+        #     oem_c = oem_final[oem_final['Remark']=='Pls Check'][['Location','OrderNumber']].drop_duplicates()
+        #     # Preview for UI & for dealerwise ZIP
+        #     previews[key_oem] = oem_final.copy()
+
+        #     # Build Excel with two sheets (sheet1: summary of "Pls Check", sheet2: full)
+        #     excel_buffer = io.BytesIO()
+        #     with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
+        #         #oem_c = oem_final[oem_final['Remark']=='Pls Check'][['Location','OrderNumber']].drop_duplicates()
+        #         oem_c.reset_index(drop=True).to_excel(writer, sheet_name='sheet1', index=False)
+        #         oem_final.reset_index(drop=True).to_excel(writer, sheet_name='sheet2', index=False)
+        #     files[key_oem] = excel_buffer.getvalue()
+
+        # Save OEM_{...}.xlsx (Hyundai unified)
         if frames_for_oem:
             key_oem = f"OEM_{brand}_{dealer}_{location}.xlsx"
             oem_final = pd.concat(frames_for_oem, ignore_index=True)
-            oem_final['PartNumber']  = oem_final['PartNumber'].astype(str).str.strip().replace('-','').replace('.','')
-            
-            oem_final['OEMInvoiceNo']=''
-            oem_final['OEMInvoiceDate']=''
-            oem_final['OEMInvoiceQty']=''
-            oem_final['OrderDate'] = pd.to_datetime(oem_final['OrderDate'], errors='coerce')
-            oem_final['OrderDate'] = oem_final['OrderDate'].dt.strftime('%d %b %Y')
-
+        
+            # CLEAN: remove - and . safely
+            oem_final['PartNumber'] = (
+                oem_final['PartNumber'].astype(str).str.strip().str.replace(r'[\-.]', '', regex=True)
+            )
+        
+            oem_final['OEMInvoiceNo'] = ''
+            oem_final['OEMInvoiceDate'] = ''
+            oem_final['OEMInvoiceQty'] = ''
+            oem_final['OrderDate'] = pd.to_datetime(oem_final['OrderDate'], errors='coerce').dt.strftime('%d %b %Y')
+        
             # Preview for UI & for dealerwise ZIP
             previews[key_oem] = oem_final.copy()
-
-            # Build Excel with two sheets (sheet1: summary of "Pls Check", sheet2: full)
+        
+            # Build Excel with two sheets: Summary (Pls Check) + FullData
             excel_buffer = io.BytesIO()
             with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
-                oem_c = oem_final[oem_final['Remark']=='Pls Check'][['Location','OrderNumber']].drop_duplicates()
-                oem_c.to_excel(writer, sheet_name='sheet1', index=False)
-                oem_final.reset_index(drop=True).to_excel(writer, sheet_name='sheet2', index=False)
+                summary = (
+                    oem_final.loc[oem_final['Remark'].astype(str).str.strip().str.lower().eq('pls check'),
+                                  ['Location', 'OrderNumber']]
+                            .drop_duplicates()
+                )
+                # keep a visible row even if empty (optional)
+                if summary.empty:
+                    summary = pd.DataFrame([{'Location': '—', 'OrderNumber': 'No "Pls Check" rows'}])
+        
+                summary.to_excel(writer, sheet_name='Summary', index=False)
+                oem_final.reset_index(drop=True).to_excel(writer, sheet_name='FullData', index=False)
+        
+                # make Summary the active sheet
+                writer.book.active = 0
+        
             files[key_oem] = excel_buffer.getvalue()
 
+        
         # Save Stock_{...}.xlsx
         if Stock_data:
             key_stock = f"Stock_{brand}_{dealer}_{location}.xlsx"
@@ -431,5 +470,6 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
     else:
         st.info("ℹ No reports available to download.")
         st.warring("Pls check Folder Structure")
+
 
 
