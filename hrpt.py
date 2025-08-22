@@ -120,11 +120,13 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
                     sd = sd[sd['New partcat'].astype(str).str.lower().isin(sel)]
 
                 # Final stock export schema
-                sd['part_col'] =sd['part_col'].astype(str).str.strip()
-                sd[qty_col] = sd[qty_col].astype(float)
+                #sd['part_col'] =sd['part_col'].astype(str).str.strip()
+                #sd['qty_col'] = sd['qty_col'].astype(float)
                 out = sd[['Brand', 'Dealer', 'Location', part_col, qty_col]].copy()
                 out.rename(columns={part_col: 'Partnumber', qty_col: 'Qty'}, inplace=True)
-                out['Qty'] = to_num(out['Qty'])
+                out['Partnumber']=out['Partnumber'].astype(str).str.strip()
+                out['Qty'] = to_num(out['Qty']).astype(float)
+               
                 Stock_data.append(out)
                 continue
 
@@ -417,5 +419,6 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
         )
     else:
         st.info("ℹ No reports available to download.")
+
 
 
