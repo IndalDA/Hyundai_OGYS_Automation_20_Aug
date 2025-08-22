@@ -307,7 +307,8 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
         if frames_for_oem:
             key_oem = f"OEM_{brand}_{dealer}_{location}.xlsx"
             oem_final = pd.concat(frames_for_oem, ignore_index=True)
-            oem_final['PartNumber']  = oem_final['PartNumber'].astype(str).str.strip()
+            oem_final['PartNumber']  = oem_final['PartNumber'].astype(str).str.strip().replace('-','').replace('.','')
+            
             oem_final['OEMInvoiceNo']=''
             oem_final['OEMInvoiceDate']=''
             oem_final['OEMInvoiceQty']=''
@@ -430,4 +431,5 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
     else:
         st.info("ℹ No reports available to download.")
         st.warring("Pls check Folder Structure")
+
 
