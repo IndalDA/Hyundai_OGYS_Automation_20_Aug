@@ -324,9 +324,9 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
             # Save the buffer in dfs for download
             dfs[key_oem] = excel_buffer.getvalue()
           
-            with pd.ExcelWriter(dfs[key_oem],engine='openpyxl') as d:
-                oem_c.to_excel(d,sheet_name='sheet1',index=False)
-                oem_final.reset_index(drop=True).to_excel(d,sheet_name='sheet2',index=False)
+            # with pd.ExcelWriter(dfs[key_oem],engine='openpyxl') as d:
+            #     oem_c.to_excel(d,sheet_name='sheet1',index=False)
+            #     oem_final.reset_index(drop=True).to_excel(d,sheet_name='sheet2',index=False)
             #dfs[key_oem] = oem_final
 
         # Save Stock_{...}.xlsx
@@ -366,7 +366,7 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
     report_types = {
         'OEM':   [k for k in dfs.keys() if k.startswith('OEM_')],
         'Stock': [k for k in dfs.keys() if k.startswith('Stock_')],
-        # 'Lists': [k for k in dfs.keys() if k.startswith(('Recv_', 'Transfer_'))],
+        'Transfer': [k for k in dfs.keys() if k.startswith(('Transfer_'))],
     }
 
     for report_type, files in report_types.items():
@@ -427,6 +427,7 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
         )
     else:
         st.info("ℹ No reports available to download.")
+
 
 
 
