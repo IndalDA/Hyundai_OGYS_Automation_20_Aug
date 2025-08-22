@@ -435,6 +435,42 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
                     st.warning("⚠ Download content missing for this file.")
 
     # ---------- Combined ZIP per (report_type, brand, dealer) using previews (DataFrames) ----------
+    # grouped_data = defaultdict(list)
+    # for file_name, df in previews.items():
+    #     if df is None or df.empty:
+    #         continue
+    #     parts = file_name.replace(".xlsx", "").split("_")
+    #     if len(parts) >= 4:
+    #         rep, br, dlr = parts[0], parts[1], parts[2]
+    #         loc_part = "_".join(parts[3:])
+    #         if "Location" not in df.columns:
+    #             df = df.copy()
+    #             df["Location"] = loc_part
+    #         grouped_data[(rep, br, dlr)].append(df)
+    #     else:
+    #         st.warning(f"❗ Invalid file name format: {file_name}")
+
+    # if grouped_data:
+    #     zip_buffer = io.BytesIO()
+    #     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zipf:
+    #         for (rep, br, dlr), df_list in grouped_data.items():
+    #             combined_df = pd.concat(df_list, ignore_index=True)
+    #             excel_buffer = io.BytesIO()
+    #             with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
+    #                 combined_df.to_excel(writer, sheet_name="Sheet1", index=False)
+    #             output_filename = f"{rep}_{br}_{dlr}.xlsx"
+    #             zipf.writestr(output_filename, excel_buffer.getvalue())
+
+    #     st.download_button(
+    #         label="📦 Download Combined Dealer Reports ZIP",
+    #         data=zip_buffer.getvalue(),
+    #         file_name="Combined_Dealerwise_Reports.zip",
+    #         mime="application/zip",
+    #     )
+    # else:
+    #     st.info("ℹ No reports available to download.")
+    #     st.warring("Pls check Folder Structure")
+    # ---------- Combined ZIP per (report_type, brand, dealer) using previews (DataFrames) ----------
     grouped_data = defaultdict(list)
     for file_name, df in previews.items():
         if df is None or df.empty:
@@ -449,18 +485,33 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
             grouped_data[(rep, br, dlr)].append(df)
         else:
             st.warning(f"❗ Invalid file name format: {file_name}")
-
+    
     if grouped_data:
         zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zipf:
             for (rep, br, dlr), df_list in grouped_data.items():
                 combined_df = pd.concat(df_list, ignore_index=True)
+    
                 excel_buffer = io.BytesIO()
                 with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
-                    combined_df.to_excel(writer, sheet_name="Sheet1", index=False)
+                    if rep == "OEM":
+                        summary = (
+                            combined_df.loc[combined_df['Remark'].astype(str).str.strip().str.lower().eq('pls check'),
+                                            ['Location', 'OrderNumber']]
+                                       .drop_duplicates()
+                        )
+                        if summary.empty:
+                            summary = pd.DataFrame([{'Location': '—', 'OrderNumber': 'No "Pls Check" rows'}])
+    
+                        summary.to_excel(writer, sheet_name="Summary", index=False)
+                        combined_df.to_excel(writer, sheet_name="FullData", index=False)
+                        writer.book.active = 0
+                    else:
+                        combined_df.to_excel(writer, sheet_name="Sheet1", index=False)
+    
                 output_filename = f"{rep}_{br}_{dlr}.xlsx"
                 zipf.writestr(output_filename, excel_buffer.getvalue())
-
+    
         st.download_button(
             label="📦 Download Combined Dealer Reports ZIP",
             data=zip_buffer.getvalue(),
@@ -469,7 +520,9 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
         )
     else:
         st.info("ℹ No reports available to download.")
-        st.warring("Pls check Folder Structure")
+        st.warning("Pls check Folder Structure")  # (fix typo from st.warring -> st.warning)
+
+
 
 
 
