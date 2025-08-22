@@ -316,6 +316,14 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
             oem_final['OrderDate'] = oem_final['OrderDate'].dt.strftime('%d %b %Y')
           
             oem_c = oem_final[oem_final['Remark']=='Pls Check'][['Location','OrderNumber']].drop_duplicates()
+            excel_buffer = io.BytesIO()
+            with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
+                oem_c.to_excel(writer, sheet_name='sheet1', index=False)
+                oem_final.reset_index(drop=True).to_excel(writer, sheet_name='sheet2', index=False)
+            
+            # Save the buffer in dfs for download
+            dfs[key_oem] = excel_buffer.getvalue()
+          
             with pd.ExcelWriter(dfs[key_oem],engine='openpyxl') as d:
                 oem_c.to_excel(d,sheet_name='sheet1',index=False)
                 oem_final.reset_index(drop=True).to_excel(d,sheet_name='sheet2',index=False)
@@ -419,6 +427,7 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
         )
     else:
         st.info("ℹ No reports available to download.")
+
 
 
 
