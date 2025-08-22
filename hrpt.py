@@ -385,7 +385,7 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
             stock_df = pd.concat(Stock_data, ignore_index=True)
             #stock_df['PART NO ?']  = stock_df['PART NO ?'].astype(str).str.strip().replace('.','').replace('-','')
             stock_df['PART NO ?'] = (stock_df['PART NO ?'].astype(str).str.strip().str.replace('.', '', regex=False).str.replace('-', '', regex=False))
-            stock_df['PART TYPE'] = stock_df['PART TYPE'].astype(str).str.strip(
+            stock_df['PART TYPE'] = stock_df['PART TYPE'].astype(str).str.strip()
             if select_categories == ['Spares']:
                 stock_df = stock_df[stock_df['PART TYPE'].isin(['X', 'Y'])]
             elif select_categories == ['Accessories']:
@@ -549,6 +549,7 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
     else:
         st.info("ℹ No reports available to download.")
         st.warning("Pls check Folder Structure")  # (fix typo from st.warring -> st.warning)
+
 
 
 
