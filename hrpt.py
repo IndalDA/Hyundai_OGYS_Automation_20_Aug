@@ -429,3 +429,5 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
         )
     else:
         st.info("ℹ No reports available to download.")
+        st.warring("Pls check Folder Structure")
+
