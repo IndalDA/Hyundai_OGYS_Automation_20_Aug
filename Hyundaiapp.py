@@ -449,8 +449,6 @@ with st.sidebar:
         options=['Spares', 'Accessories', 'All'],
         default=['Spares']
     )
-    if 'All' in select_categories:
-        select_categories = ['Spares', 'Accessories']
 
     default_end = datetime.today()
     default_start = default_end - timedelta(days=59)
