@@ -396,7 +396,7 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
             elif select_categories==['Spares','Accessories']:
               stock_df = stock_df[stock_df['New partcat'].isin(select_categories)]
             stock_final=stock_df[['Brand','Dealer','Location','PART NO ?','ON-HAND']]
-            stock_final.rename(columns={'PART NO ?':'Partnumber','ON-HAND':'Qty'},inpalce=True)
+            stock_final.rename(columns={'PART NO ?':'Partnumber','ON-HAND':'Qty'},inplace=True)
             # sd['Brand'] = brand
             #     sd['Dealer'] = dealer
             #     sd['Location'] = location
@@ -554,6 +554,7 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
     else:
         st.info("ℹ No reports available to download.")
         st.warning("Pls check Folder Structure")  # (fix typo from st.warring -> st.warning)
+
 
 
 
