@@ -110,7 +110,7 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
                 # Map PART TYPE -> New partcat
                 if 'PART TYPE' in sd.columns:
                     sd['PART TYPE'] = sd['PART TYPE'].astype(str).str.strip()
-                    sd['New partcat'] = sd['PART TYPE'].str.upper().map({'X': 'Spares', 'A': 'Accessories'})
+                    sd['New partcat'] = sd['PART TYPE'].str.upper().map({'X': 'Spares','Y': 'Spares', 'A': 'Accessories'})
                 else:
                     sd['New partcat'] = None
 
@@ -120,6 +120,8 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
                     sd = sd[sd['New partcat'].astype(str).str.lower().isin(sel)]
 
                 # Final stock export schema
+                sd['part_col'] =sd['part_col'].astype(str).str.strip()
+                sd[qty_col] = sd[qty_col].astype(float)
                 out = sd[['Brand', 'Dealer', 'Location', part_col, qty_col]].copy()
                 out.rename(columns={part_col: 'Partnumber', qty_col: 'Qty'}, inplace=True)
                 out['Qty'] = to_num(out['Qty'])
@@ -304,7 +306,18 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
         if frames_for_oem:
             key_oem = f"OEM_{brand}_{dealer}_{location}.xlsx"
             oem_final = pd.concat(frames_for_oem, ignore_index=True)
-            dfs[key_oem] = oem_final
+            oem_final['PartNumber']  = oem_final['PartNumber'].astype(str).str.strip()
+            oem_final['OEMInvoiceNo']=''
+            oem_final['OEMInvoiceDate']=''
+            oem_final['OEMInvoiceQty']=''
+            oem_final['OrderDate'] = pd.to_datetime(oem_final['OrderDate'], errors='coerce')
+            oem_final['OrderDate'] = oem_final['OrderDate'].dt.strftime('%d %b %Y')
+          
+            oem_c = oem_final[oem_final['Remark']=='Pls Check'][['Location','OrderNumber']].drop_duplicates()
+            with pd.ExcelWriter(dfs[key_oem],engine='openpyxl') as d:
+                oem_c.to_excel(d,sheet_name='sheet1',index=False)
+                oem_final.reset_index(drop=True).to_excel(d,sheet_name='sheet2',index=False)
+            #dfs[key_oem] = oem_final
 
         # Save Stock_{...}.xlsx
         if Stock_data:
@@ -395,3 +408,4 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
         )
     else:
         st.info("ℹ No reports available to download.")
+
