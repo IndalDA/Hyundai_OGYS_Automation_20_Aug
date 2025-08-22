@@ -382,8 +382,26 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
         # Save Stock_{...}.xlsx
         if Stock_data:
             key_stock = f"Stock_{brand}_{dealer}_{location}.xlsx"
-            stock_final = pd.concat(Stock_data, ignore_index=True)
+            stock_df = pd.concat(Stock_data, ignore_index=True)
             
+            stock_df['PART NO ?']  = stock_df['PART NO ?'].astype(str).str.strip().replace('.','').replace('-','')
+            stock_df['PART TYPE']  = stock_df['PART TYPE'].astype(str).str.strip()
+            stock_df['New partcat'] = stock_df.apply(
+                lambda row: 'Spares' if str(row['PART TYPE']).strip().upper() == 'X' or str(row['PART TYPE']).strip().upper() == 'Y'
+                else 'Accessories' if str(row['PART TYPE']).strip().upper() == 'A' else None,axis=1)
+            if select_categories==['Spares']:
+              stock_df = stock_df[stock_df['New partcat'].isin(select_categories)]
+            elif select_categories==['Accessories']:
+              stock_df = stock_df[stock_df['New partcat'].isin(select_categories)]
+            elif select_categories==['Spares','Accessories']:
+              stock_df = stock_df[stock_df['New partcat'].isin(select_categories)]
+            stock_final=stock_df[['Brand','Dealer','Location','PART NO ?','ON-HAND']]
+            stock_final.rename(columns={'PART NO ?':'Partnumber','ON-HAND':'Qty'},inpalce=True)
+            # sd['Brand'] = brand
+            #     sd['Dealer'] = dealer
+            #     sd['Location'] = location
+            #     sd['__source_file__'] = file
+
             previews[key_stock] = stock_final.copy()
             buf = io.BytesIO()
             with pd.ExcelWriter(buf, engine="openpyxl") as writer:
@@ -536,6 +554,7 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
     else:
         st.info("ℹ No reports available to download.")
         st.warning("Pls check Folder Structure")  # (fix typo from st.warring -> st.warning)
+
 
 
 
