@@ -324,7 +324,16 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
             key_stock = f"Stock_{brand}_{dealer}_{location}.xlsx"
             stock_final = pd.concat(Stock_data, ignore_index=True)
             dfs[key_stock] = stock_final
+        if Transfer_Detail:
+          tr = pd.concat(Transfer_Detail,ignore_index=True)
+          tr_Df = tr[[ 'Brand','Dealer','Location','PART NO ?','QUANTITY']]
+          tr_Df['PART NO ?']=tr_Df['PART NO ?'].astype(str).str.strip()
+          tr_Df.rename(columns={'PART NO ?':'PartNumber','QUANTITY':'Qty'},inplace=True)
+          key_stock = f"Pending_{brand}_{dealer}_{location}.xlsx"
+          dfs[key_stock] = tr_Df
 
+                    
+                    
         # (Optional: also persist lists/details if you want them downloadable)
         # if Receving_Pending_list:
         #     dfs[f"Recv_Pending_List_{brand}_{dealer}_{location}.xlsx"] = pd.concat(Receving_Pending_list, ignore_index=True)
@@ -408,4 +417,5 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
         )
     else:
         st.info("ℹ No reports available to download.")
+
 
