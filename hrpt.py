@@ -322,7 +322,8 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
                 oem_final.reset_index(drop=True).to_excel(writer, sheet_name='sheet2', index=False)
             
             # Save the buffer in dfs for download
-            dfs[key_oem] = excel_buffer.getvalue()
+            #dfs[key_oem] = excel_buffer.getvalue()
+            dfs[key_oem + "_excel"] = excel_buffer.getvalue()
           
             # with pd.ExcelWriter(dfs[key_oem],engine='openpyxl') as d:
             #     oem_c.to_excel(d,sheet_name='sheet1',index=False)
@@ -389,6 +390,7 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
                 st.download_button(
                     label="⬇ Download Excel",
                     data=excel_buffer.getvalue(),
+                    #dfs[key_oem + "_excel"] = excel_buffer.getvalue()
                     file_name=file,
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     key=f"dl_{file}",
@@ -427,6 +429,7 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
         )
     else:
         st.info("ℹ No reports available to download.")
+
 
 
 
