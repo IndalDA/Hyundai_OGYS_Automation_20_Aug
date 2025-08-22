@@ -9,7 +9,9 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
     from datetime import datetime, timedelta
     from collections import defaultdict
 
-    dfs = {}
+    # Keep DataFrame previews separate from downloadable file bytes
+    previews = {}  # name -> DataFrame
+    files = {}     # name -> excel bytes
 
     # ---------- helpers ----------
     def read_file(file_path, header=None):
@@ -119,9 +121,6 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
                     sel = set([str(x).strip().lower() for x in select_categories])
                     sd = sd[sd['New partcat'].astype(str).str.lower().isin(sel)]
 
-                # Final stock export schema
-                #sd['part_col'] =sd['part_col'].astype(str).str.strip()
-                #sd['qty_col'] = sd['qty_col'].astype(float)
                 out = sd[['Brand', 'Dealer', 'Location', part_col, qty_col]].copy()
                 out.rename(columns={part_col: 'Partnumber', qty_col: 'Qty'}, inplace=True)
                 out['Partnumber']=out['Partnumber'].astype(str).str.strip()
@@ -314,45 +313,43 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
             oem_final['OEMInvoiceQty']=''
             oem_final['OrderDate'] = pd.to_datetime(oem_final['OrderDate'], errors='coerce')
             oem_final['OrderDate'] = oem_final['OrderDate'].dt.strftime('%d %b %Y')
-          
-            oem_c = oem_final[oem_final['Remark']=='Pls Check'][['Location','OrderNumber']].drop_duplicates()
+
+            # Preview for UI & for dealerwise ZIP
+            previews[key_oem] = oem_final.copy()
+
+            # Build Excel with two sheets (sheet1: summary of "Pls Check", sheet2: full)
             excel_buffer = io.BytesIO()
             with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
+                oem_c = oem_final[oem_final['Remark']=='Pls Check'][['Location','OrderNumber']].drop_duplicates()
                 oem_c.to_excel(writer, sheet_name='sheet1', index=False)
                 oem_final.reset_index(drop=True).to_excel(writer, sheet_name='sheet2', index=False)
-          
-            #dfs[key_oem] = oem_final 
-            dfs[key_oem] = excel_buffer.getvalue()
-          
-            # with pd.ExcelWriter(dfs[key_oem],engine='openpyxl') as d:
-            #     oem_c.to_excel(d,sheet_name='sheet1',index=False)
-            #     oem_final.reset_index(drop=True).to_excel(d,sheet_name='sheet2',index=False)
-            #dfs[key_oem] = oem_final
+            files[key_oem] = excel_buffer.getvalue()
 
         # Save Stock_{...}.xlsx
         if Stock_data:
             key_stock = f"Stock_{brand}_{dealer}_{location}.xlsx"
             stock_final = pd.concat(Stock_data, ignore_index=True)
-            dfs[key_stock] = stock_final
-        if Transfer_Detail:
-          tr = pd.concat(Transfer_Detail,ignore_index=True)
-          tr_Df = tr[[ 'Brand','Dealer','Location','PART NO ?','QUANTITY']]
-          tr_Df['PART NO ?']=tr_Df['PART NO ?'].astype(str).str.strip()
-          tr_Df.rename(columns={'PART NO ?':'PartNumber','QUANTITY':'Qty'},inplace=True)
-          key_stock = f"Pending_{brand}_{dealer}_{location}.xlsx"
-          dfs[key_stock] = tr_Df
+            previews[key_stock] = stock_final.copy()
+            buf = io.BytesIO()
+            with pd.ExcelWriter(buf, engine="openpyxl") as writer:
+                stock_final.to_excel(writer, index=False, sheet_name="Sheet1")
+            files[key_stock] = buf.getvalue()
 
-                    
-                    
-        # (Optional: also persist lists/details if you want them downloadable)
-        # if Receving_Pending_list:
-        #     dfs[f"Recv_Pending_List_{brand}_{dealer}_{location}.xlsx"] = pd.concat(Receving_Pending_list, ignore_index=True)
-        # if Receving_Today_List:
-        #     dfs[f"Recv_Today_List_{brand}_{dealer}_{location}.xlsx"] = pd.concat(Receving_Today_List, ignore_index=True)
-        # if Transfer_List:
-        #     dfs[f"Transfer_List_{brand}_{dealer}_{location}.xlsx"] = pd.concat(Transfer_List, ignore_index=True)
-        # if Transfer_Detail:
-        #     dfs[f"Transfer_Detail_{brand}_{dealer}_{location}.xlsx"] = pd.concat(Transfer_Detail, ignore_index=True)
+        # Pending (from Transfer_Detail minimal subset) -> Pending_{...}.xlsx
+        if Transfer_Detail:
+            tr = pd.concat(Transfer_Detail, ignore_index=True)
+            # Only add if expected columns exist
+            needed_cols = {'PART NO ?', 'QUANTITY'}
+            if needed_cols.issubset(set(tr.columns)):
+                tr_Df = tr[['Brand','Dealer','Location','PART NO ?','QUANTITY']].copy()
+                tr_Df['PART NO ?'] = tr_Df['PART NO ?'].astype(str).str.strip()
+                tr_Df.rename(columns={'PART NO ?':'PartNumber','QUANTITY':'Qty'}, inplace=True)
+                key_pending = f"Pending_{brand}_{dealer}_{location}.xlsx"
+                previews[key_pending] = tr_Df.copy()
+                buf = io.BytesIO()
+                with pd.ExcelWriter(buf, engine="openpyxl") as writer:
+                    tr_Df.to_excel(writer, index=False, sheet_name="Sheet1")
+                files[key_pending] = buf.getvalue()
 
     # ---------- UI ----------
     if validation_errors:
@@ -363,41 +360,45 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
     st.success("🎉 Reports generated successfully!")
     st.subheader("📥 Download Reports")
 
+    # Build sections from available file names (files dict is source of truth for downloads)
     report_types = {
-        'OEM':   [k for k in dfs.keys() if k.startswith('OEM_')],
-        'Stock': [k for k in dfs.keys() if k.startswith('Stock_')],
-        'Transfer': [k for k in dfs.keys() if k.startswith(('Transfer_'))],
+        'OEM':      [k for k in files.keys() if k.startswith('OEM_')],
+        'Stock':    [k for k in files.keys() if k.startswith('Stock_')],
+        'Transfer': [k for k in files.keys() if k.startswith(('Transfer_','Pending_'))],
     }
 
-    for report_type, files in report_types.items():
-        if not files:
+    for report_type, names in report_types.items():
+        if not names:
             continue
-        with st.expander(f"📂 {report_type} Reports ({len(files)})", expanded=False):
-            for file in files:
-                df = dfs.get(file)
-                if df is None or df.empty:
-                    st.warning(f"⚠ No data for {file}")
-                    continue
+        with st.expander(f"📂 {report_type} Reports ({len(names)})", expanded=False):
+            for name in names:
+                st.markdown(f"### 📄 {name}")
 
-                st.markdown(f"### 📄 {file}")
-                st.dataframe(df.head(5))
+                # Show preview if we have it
+                df_preview = previews.get(name)
+                if df_preview is not None and not df_preview.empty:
+                    st.dataframe(df_preview.head(5))
+                else:
+                    st.info("No preview available.")
 
-                excel_buffer = io.BytesIO()
-                with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
-                    df.to_excel(writer, index=False, sheet_name="Sheet1")
+                # Download button (bytes)
+                blob = files.get(name)
+                if blob:
+                    st.download_button(
+                        label="⬇ Download Excel",
+                        data=blob,
+                        file_name=name,
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        key=f"dl_{name}",
+                    )
+                else:
+                    st.warning("⚠ Download content missing for this file.")
 
-                st.download_button(
-                    label="⬇ Download Excel",
-                    data=excel_buffer.getvalue(),
-                    #dfs[key_oem + "_excel"] = excel_buffer.getvalue()
-                    file_name=file,
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    key=f"dl_{file}",
-                )
-
-    # ---------- Combined ZIP per (report_type, brand, dealer) ----------
+    # ---------- Combined ZIP per (report_type, brand, dealer) using previews (DataFrames) ----------
     grouped_data = defaultdict(list)
-    for file_name, df in dfs.items():
+    for file_name, df in previews.items():
+        if df is None or df.empty:
+            continue
         parts = file_name.replace(".xlsx", "").split("_")
         if len(parts) >= 4:
             rep, br, dlr = parts[0], parts[1], parts[2]
@@ -428,10 +429,3 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
         )
     else:
         st.info("ℹ No reports available to download.")
-
-
-
-
-
-
-
