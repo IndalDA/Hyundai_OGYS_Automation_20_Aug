@@ -275,7 +275,7 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
                 return None
 
             oem_work['Remark'] = oem_work.apply(_remark, axis=1)
-
+            oem_work['transit'] = oem_work.apply(lambda row:row['QUANTITY_CURRENT'] if row['Remark']=='Pls Check' else row['transit'] ,axis=1)
             oem_workf = oem_work[['Brand', 'Dealer', 'Location', 'ORDER NO', 'PART NO_CURRENT', 'PO DATE', 'transit', 'Remark']].copy()
             oem_workf.rename(columns={
                 'ORDER NO': 'OrderNumber',
@@ -549,6 +549,7 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
     else:
         st.info("ℹ No reports available to download.")
         st.warning("Pls check Folder Structure")  # (fix typo from st.warring -> st.warning)
+
 
 
 
