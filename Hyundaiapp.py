@@ -275,7 +275,7 @@ def validate_cross_sums(all_locations):
             if df is None or df.empty: continue
             df.columns = RPL_COLS[:df.shape[1]]
             if 'SHIPPED INFORMATION_ACCEPT QTY' in df.columns:
-                rpl_accept += _to_num(df['SHIPPED INFORMATION_ACCEPT QTY']).sum()
+                rpl_accept += _to_num(df['SHIPPED INFORMATION_ACCEPT QTY'].astype(float)).sum()
 
         rpd_accept = 0.0
         for f in rpd_files:
@@ -283,7 +283,7 @@ def validate_cross_sums(all_locations):
             if df is None or df.empty: continue
             df.columns = RPD_COLS[:df.shape[1]]
             if 'ACCEPT QTY' in df.columns:
-                rpd_accept += _to_num(df['ACCEPT QTY']).sum()
+                rpd_accept += _to_num(df['ACCEPT QTY'].astype(float)).sum()
 
         if (rpl_files or rpd_files) and abs(rpl_accept - rpd_accept) > 1e-6:
             errors.append(f"{location}: Receiving Pending List ACCEPT({rpl_accept:.2f}) != Pending Detail ACCEPT QTY({rpd_accept:.2f})")
@@ -300,7 +300,7 @@ def validate_cross_sums(all_locations):
             if df is None or df.empty: continue
             df.columns = RPL_COLS[:df.shape[1]]
             if 'SHIPPED INFORMATION_ACCEPT QTY' in df.columns:
-                rtl_accept += _to_num(df['SHIPPED INFORMATION_ACCEPT QTY']).sum()
+                rtl_accept += _to_num(df['SHIPPED INFORMATION_ACCEPT QTY'].astype(float)).sum()
 
         rtd_accept = 0.0
         for f in rtd_files:
@@ -308,7 +308,7 @@ def validate_cross_sums(all_locations):
             if df is None or df.empty: continue
             df.columns = RPD_COLS[:df.shape[1]]
             if 'ACCEPT QTY' in df.columns:
-                rtd_accept += _to_num(df['ACCEPT QTY']).sum()
+                rtd_accept += _to_num(df['ACCEPT QTY'].astype(float)).sum()
 
         if (rtl_files or rtd_files) and abs(rtl_accept - rtd_accept) > 1e-6:
             errors.append(f"{location}: Receiving Today List ACCEPT({rtl_accept:.2f}) != Today Detail ACCEPT QTY({rtd_accept:.2f})")
@@ -325,7 +325,7 @@ def validate_cross_sums(all_locations):
             if df is None or df.empty: continue
             df.columns = TL_COLS[:df.shape[1]]
             if 'QUANTITY_SEND' in df.columns:
-                tl_send += _to_num(df['QUANTITY_SEND']).sum()
+                tl_send += _to_num(df['QUANTITY_SEND'].astype(float)).sum()
 
         # Transfer Detail is less standardized; try common candidates
         td_qty = 0.0
@@ -336,7 +336,7 @@ def validate_cross_sums(all_locations):
             # pick the first candidate present (case-sensitive as read)
             cand = next((c for c in qty_candidates if c in df.columns), None)
             if cand:
-                td_qty += _to_num(df[cand]).sum()
+                td_qty += _to_num(df[cand].astype(float)).sum()
 
         if (tl_files or td_files) and abs(tl_send - td_qty) > 1e-6:
             errors.append(f"{location}: Transfer List SEND({tl_send:.2f}) != Transfer Detail QUANTITY({td_qty:.2f})")
@@ -570,3 +570,4 @@ if st.session_state.uploaded_file is not None:
         or st.session_state.period_validation_errors
     ):
         show_validation_issues()
+
