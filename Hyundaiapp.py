@@ -274,10 +274,11 @@ def validate_cross_sums(all_locations):
             df = read_file(os.path.join(location_path, f), header=2)
             if df is None or df.empty: continue
             df.columns = RPL_COLS[:df.shape[1]]
-            df['SHIPPED INFORMATION_ACCEPT QTY']=df['SHIPPED INFORMATION_ACCEPT QTY'].astype(float).fillna(0.0)
-            st.dataframe(df)
+            #df['SHIPPED INFORMATION_ACCEPT QTY']=df['SHIPPED INFORMATION_ACCEPT QTY'].astype(float).fillna(0.0)
+            #st.dataframe(df)
             if 'SHIPPED INFORMATION_ACCEPT QTY' in df.columns:
-                rpl_accept += df['SHIPPED INFORMATION_ACCEPT QTY'].astype(float).sum()
+                rpl_accept += _to_num(df['SHIPPED INFORMATION_ACCEPT QTY']).sum()
+               # rpl_accept += df['SHIPPED INFORMATION_ACCEPT QTY'].astype(float).sum()
 
         rpd_accept = 0.0
         for f in rpd_files:
@@ -285,7 +286,8 @@ def validate_cross_sums(all_locations):
             if df is None or df.empty: continue
             df.columns = RPD_COLS[:df.shape[1]]
             if 'ACCEPT QTY' in df.columns:
-                rpd_accept += df['ACCEPT QTY'].astype(float).sum()
+                rpd_accept += _to_num(df['ACCEPT QTY']).sum()
+                #rpd_accept += df['ACCEPT QTY'].astype(float).sum()
 
         if (rpl_files or rpd_files) and abs(rpl_accept - rpd_accept) > 1e-6:
             errors.append(f"{location}: Receiving Pending List ACCEPT({rpl_accept:.2f}) != Pending Detail ACCEPT QTY({rpd_accept:.2f})")
@@ -577,6 +579,7 @@ if st.session_state.uploaded_file is not None:
         or st.session_state.period_validation_errors
     ):
         show_validation_issues()
+
 
 
 
