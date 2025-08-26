@@ -35,36 +35,42 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
     #         return None
     def read_file(file_path, header=0):
       import pandas as pd
+      import os
   
       lower = file_path.lower()
       try:
+          # .xlsx real Excel
           if lower.endswith(".xlsx"):
               return pd.read_excel(file_path, header=header, engine="openpyxl")
   
+          # .xls can be real Excel OR HTML in disguise
           if lower.endswith(".xls"):
-              try:
-                  # Try normal Excel reader first
-                  return pd.read_excel(file_path, header=header, engine="xlrd")
-              except Exception:
+              for engine in ["xlrd", "openpyxl"]:
                   try:
-                      return pd.read_excel(file_path, header=header, engine="openpyxl")
+                      return pd.read_excel(file_path, header=header, engine=engine)
                   except Exception:
-                      # Fallback: treat as HTML disguised as XLS
-                      dfs = pd.read_html(file_path, header=header)
-                      if dfs:
-                          return dfs[0]
-                      return None
+                      continue
+              # If all Excel engines fail → force HTML read
+              try:
+                  dfs = pd.read_html(file_path, header=header)
+                  if dfs:
+                      return dfs[0]
+              except Exception as e:
+                  print(f"❌ HTML fallback failed for {file_path}: {e}")
+              return None
   
-          # CSV/TXT fallback
-          return pd.read_csv(file_path, header=header, sep=None, engine="python",
-                             on_bad_lines="skip", encoding="utf-8")
+          # CSV/TXT
+          try:
+              return pd.read_csv(file_path, header=header, sep=None, engine="python",
+                                 on_bad_lines="skip", encoding="utf-8")
+          except UnicodeDecodeError:
+              return pd.read_csv(file_path, header=header, sep=None, engine="python",
+                                 on_bad_lines="skip", encoding="windows-1252")
   
-      except UnicodeDecodeError:
-          return pd.read_csv(file_path, header=header, sep=None, engine="python",
-                             on_bad_lines="skip", encoding="windows-1252")
       except Exception as e:
           print(f"❌ Failed to read {file_path}: {e}")
           return None
+
                 
 
     def to_num(s):
@@ -609,6 +615,7 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
     else:
         st.info("ℹ No reports available to download.")
         st.warning("Pls check Folder Structure")  # (fix typo from st.warring -> st.warning)
+
 
 
 
