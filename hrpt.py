@@ -143,8 +143,8 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
                 # Stock_data.append(out)
                 # continue
 
-            # RECEIVING PENDING DETAIL (header=1)
-            if fl.startswith("receving pending detail"):
+            # RECEIVING PENDING DETAIL (header=1)receiving pending detail
+            if fl.startswith("receiving pending detail"):
                 cols = ['SEQ','CASE NO ','ORDER NO ','LINE NO','PART NO _SUPPLY','PART NO _ORDER','H/K','PART NAME',
                         'SUPPLY QTY','ORDER QTY','ACCEPT QTY','CLAIM QTY','CLAIM TYPE','CLAIM CODE','LOC','LIST PRICE',
                         'NDP (UNIT)','ED (UNIT)','MAT VALUE','DEPOT S/C','VOR S/C','OTHER CHARGES','STAX(%)','CTAX(%)',
@@ -161,8 +161,8 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
                 Receving_Pending_Detail.append(df)
                 continue
 
-            # RECEIVING PENDING LIST (header=2)
-            if fl.startswith("receving pending list"):
+            # RECEIVING PENDING LIST (header=2)receiving pending detail
+            if fl.startswith("receiving pending list"):
                 cols = ['SEQ','H/K','GR_NO','GR_TYPE','GR_STATUS','INVOICE_NO','INVOICE_DATE','SHIPPED INFORMATION_SUPPLIER',
                         'SHIPPED INFORMATION_TRUCK NO','SHIPPED INFORMATION_CARRIER NAME','SHIPPED INFORMATION_FINISH DATE',
                         'SHIPPED INFORMATION_ACCEPT QTY','SHIPPED INFORMATION_CLAIM QTY','SHIPPED INFORMATION_MAT VALUE',
@@ -179,7 +179,7 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
                 continue
 
             # RECEIVING TODAY LIST (header=2)
-            if fl.startswith("receving today list"):
+            if fl.startswith("receiving today list"):
                 cols = ['SEQ','H/K','GR_NO','GR_TYPE','GR_STATUS','INVOICE_NO','INVOICE_DATE','SHIPPED INFORMATION_SUPPLIER',
                         'SHIPPED INFORMATION_TRUCK NO','SHIPPED INFORMATION_CARRIER NAME','SHIPPED INFORMATION_FINISH DATE',
                         'SHIPPED INFORMATION_ACCEPT QTY','SHIPPED INFORMATION_CLAIM QTY','SHIPPED INFORMATION_MAT VALUE',
@@ -196,7 +196,7 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
                 continue
 
             # RECEIVING TODAY DETAIL (header=1)
-            if fl.startswith("receving today detail"):
+            if fl.startswith("receiving today detail"):
                 cols = ['SEQ','CASE NO ','ORDER NO ','LINE NO','PART NO _SUPPLY','PART NO _ORDER','H/K','PART NAME',
                         'SUPPLY QTY','ORDER QTY','ACCEPT QTY','CLAIM QTY','CLAIM TYPE','CLAIM CODE','LOC','LIST PRICE',
                         'NDP (UNIT)','ED (UNIT)','MAT VALUE','DEPOT S/C','VOR S/C','OTHER CHARGES','STAX(%)','CTAX(%)',
@@ -549,6 +549,7 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
     else:
         st.info("ℹ No reports available to download.")
         st.warning("Pls check Folder Structure")  # (fix typo from st.warring -> st.warning)
+
 
 
 
