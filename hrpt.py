@@ -110,14 +110,14 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
                     'PROCESSING_ON-PACK', 'PROCESSING_PACKED', 'PROCESSING_INVOICE',
                     'PROCESSING_SHIPPEO', 'LOST QTY', 'ELAP'
                 ]
-                bo_df = read_file(file_path, header=1)
-                try:
-                  bo_df.columns = custom_headers[:bo_df.shape[1]]
-                except:
-                  bo_df = pd.concat(pd.read_html(file_path,header=1),ignore_index=True)
+                # bo_df = read_file(file_path, header=1)
+                # try:
+                #   bo_df.columns = custom_headers[:bo_df.shape[1]]
+                # except:
+                bo_df = pd.concat(pd.read_html(file_path,header=1),ignore_index=True)
                   
-                  bo_df.columns = custom_headers[:bo_df.shape[1]]
-                st.Dataframe(bo_df)  
+                bo_df.columns = custom_headers[:bo_df.shape[1]]
+                #st.Dataframe(bo_df)  
                 if bo_df is None or bo_df.empty:
                     validation_errors.append(f"{location}: Unable to read BO LIST -> {file}")
                     continue
@@ -616,6 +616,7 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
     else:
         st.info("ℹ No reports available to download.")
         st.warning("Pls check Folder Structure")  # (fix typo from st.warring -> st.warning)
+
 
 
 
