@@ -157,9 +157,14 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
                         'ITAX(%)','TAX(%)','HSN CODE','TAX AMT','FRT/INS','SGST AMT','CGST AMT','IGST AMT','COMP CESS AMT',
                         'LANDED COST','ORDER DATE','RECEIVING DATE','STATUS']
                 df = read_file(file_path, header=1)
+                try:
+                  df.columns = cols[:df.shape[1]]
+                except:
+                  df = pd.concat(pd.read_html(file_path, header=1),ignore_index=True)
+                  df.columns = cols[:df.shape[1]]
                 if df is None or df.empty:
                     continue
-                df.columns = cols[:df.shape[1]]
+               # df.columns = cols[:df.shape[1]]
                 df['__source_file__'] = file
                 df['Brand'] = brand
                 df['Dealer'] = dealer
@@ -175,6 +180,11 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
                         'SHIPPED INFORMATION_FREIGHT AMT','SHIPPED INFORMATION_SGST AMT','SHIPPED INFORMATION_IGST AMT',
                         'SHIPPED INFORMATION_TCS AMT','SHIPPED INFORMATION_TAX AMOUNT']
                 df = read_file(file_path, header=2)
+                try:
+                  df.columns = cols[:df.shape[1]]
+                except:
+                  df = pd.concat(pd.read_html(file_path, header=2),ignore_index=True)
+              
                 if df is not None and not df.empty:
                     df.columns = cols[:df.shape[1]]
                     df['__source_file__'] = file
@@ -192,8 +202,13 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
                         'SHIPPED INFORMATION_FREIGHT AMT','SHIPPED INFORMATION_SGST AMT','SHIPPED INFORMATION_IGST AMT',
                         'SHIPPED INFORMATION_TCS AMT','SHIPPED INFORMATION_TAX AMOUNT']
                 df = read_file(file_path, header=2)
+               # df = read_file(file_path, header=2)
+                try:
+                  df.columns = cols[:df.shape[1]]
+                except:
+                  df = pd.concat(pd.read_html(file_path, header=2),ignore_index=True)
                 if df is not None and not df.empty:
-                    df.columns = cols[:df.shape[1]]
+                  #  df.columns = cols[:df.shape[1]]
                     df['__source_file__'] = file
                     df['Brand'] = brand
                     df['Dealer'] = dealer
@@ -209,8 +224,14 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
                         'ITAX(%)','TAX(%)','HSN CODE','TAX AMT','FRT/INS','SGST AMT','CGST AMT','IGST AMT','COMP CESS AMT',
                         'LANDED COST','ORDER DATE','RECEIVING DATE','STATUS']
                 df = read_file(file_path, header=1)
+                #df = read_file(file_path, header=2)
+                try:
+                  df.columns = cols[:df.shape[1]]
+                except:
+                  df = pd.concat(pd.read_html(file_path, header=1),ignore_index=True)
+                  
                 if df is not None and not df.empty:
-                    df.columns = cols[:df.shape[1]]
+                  #  df.columns = cols[:df.shape[1]]
                     df['__source_file__'] = file
                     df['Brand'] = brand
                     df['Dealer'] = dealer
@@ -555,6 +576,7 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
     else:
         st.info("ℹ No reports available to download.")
         st.warning("Pls check Folder Structure")  # (fix typo from st.warring -> st.warning)
+
 
 
 
