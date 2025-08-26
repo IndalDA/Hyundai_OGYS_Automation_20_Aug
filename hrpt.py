@@ -14,65 +14,30 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
     files = {}     # name -> excel bytes
 
     # ---------- helpers ----------
-    # def read_file(file_path, header=None):
-    #     try:
-    #         lower = file_path.lower()
-    #         if lower.endswith(".xlsx"):
-    #             return pd.read_excel(file_path, header=header, engine="openpyxl")
-    #         if lower.endswith(".xls"):
-    #             try:
-    #                 return pd.read_excel(file_path, header=header, engine="xlrd")
-    #             except Exception:
-    #                 return pd.read_excel(file_path, header=header, engine="openpyxl")
-    #         # CSV / TXT best-effort
-    #         try:
-    #             return pd.read_csv(file_path, header=header, sep=None, engine="python",
-    #                                on_bad_lines="skip", encoding="utf-8")
-    #         except UnicodeDecodeError:
-    #             return pd.read_csv(file_path, header=header, sep=None, engine="python",
-    #                                on_bad_lines="skip", encoding="windows-1252")
-    #     except Exception:
-    #         return None
-    def read_file(file_path, header=0):
-      import pandas as pd
-      import os
-  
-      lower = file_path.lower()
-      try:
-          # .xlsx real Excel
-          if lower.endswith(".xlsx"):
-              return pd.read_excel(file_path, header=header, engine="openpyxl")
-  
-          # .xls can be real Excel OR HTML in disguise
-          if lower.endswith(".xls"):
-              for engine in ["xlrd", "openpyxl"]:
-                  try:
-                      return pd.read_excel(file_path, header=header, engine=engine)
-                  except Exception:
-                      continue
-              # If all Excel engines fail → force HTML read
-              try:
-                  dfs = pd.read_html(file_path, header=header)
-                  if dfs:
-                      return dfs[0]
-              except Exception as e:
-                  print(f"❌ HTML fallback failed for {file_path}: {e}")
-              return None
-  
-          # CSV/TXT
-          try:
-              return pd.read_csv(file_path, header=header, sep=None, engine="python",
-                                 on_bad_lines="skip", encoding="utf-8")
-          except UnicodeDecodeError:
-              return pd.read_csv(file_path, header=header, sep=None, engine="python",
-                                 on_bad_lines="skip", encoding="windows-1252")
-  
-      except Exception as e:
-          print(f"❌ Failed to read {file_path}: {e}")
-          return None
-
-                
-
+    def read_file(file_path, header=None):
+        try:
+            lower = file_path.lower()
+            if lower.endswith(".xlsx"):
+                return pd.read_excel(file_path, header=header, engine="openpyxl")
+            if lower.endswith(".xls"):
+                try:
+                    return pd.read_excel(file_path, header=header, engine="xlrd")
+                except Exception:
+                    try:
+                      return pd.read_excel(file_path, header=header, engine="openpyxl")
+                    except:
+                      return pd.read_html(file_path, header=header)
+            # CSV / TXT best-effort
+            try:
+                return pd.read_csv(file_path, header=header, sep=None, engine="python",
+                                   on_bad_lines="skip", encoding="utf-8")
+            except UnicodeDecodeError:
+                return pd.read_csv(file_path, header=header, sep=None, engine="python",
+                                   on_bad_lines="skip", encoding="windows-1252")
+        except Exception:
+            return None
+    
+              
     def to_num(s):
         return pd.to_numeric(s, errors="coerce").fillna(0)
 
@@ -108,15 +73,16 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
                     'PARTSOURCE', 'QUANTITY_ORDER', 'QUANTITY_CURRENT', 'B/O', 'PO DATE',
                     'PDC', 'ETA', 'MSG', 'PROCESSING_ALLOCATION', 'PROCESSING_ON-PICK',
                     'PROCESSING_ON-PACK', 'PROCESSING_PACKED', 'PROCESSING_INVOICE',
-                    'PROCESSING_SHIPPEO', 'LOST QTY', 'ELAP'
-                ]
-                # bo_df = read_file(file_path, header=1)
-                # try:
+                    'PROCESSING_SHIPPEO', 'LOST QTY', 'ELAP']
+              
+                bo_df = read_file(file_path, header=1)
+                
+              # try:
                 #   bo_df.columns = custom_headers[:bo_df.shape[1]]
                 # except:
-                bo_df = pd.concat(pd.read_html(file_path,header=1),ignore_index=True)
+                #bo_df = pd.concat(pd.read_html(file_path,header=1),ignore_index=True)
                   
-                bo_df.columns = custom_headers[:bo_df.shape[1]]
+                #bo_df.columns = custom_headers[:bo_df.shape[1]]
                 #st.Dataframe(bo_df)  
                 if bo_df is None or bo_df.empty:
                     validation_errors.append(f"{location}: Unable to read BO LIST -> {file}")
@@ -616,6 +582,7 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
     else:
         st.info("ℹ No reports available to download.")
         st.warning("Pls check Folder Structure")  # (fix typo from st.warring -> st.warning)
+
 
 
 
